@@ -193,7 +193,7 @@ for epoch in range(opt.n_epochs):
         k = min(max(k, 0), 1)  # Constraint to interval [0, 1]
 
         # Update convergence metric
-        M = (d_loss_real + torch.abs(diff)).item
+        M = (d_loss_real + torch.abs(diff)).item()
 
         # --------------
         # Log Progress
