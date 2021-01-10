@@ -1,4 +1,6 @@
-
+*.jpg
+*.rar
+*.png
 *.json
 *.h5
 *.hdf5
