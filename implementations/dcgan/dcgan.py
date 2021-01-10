@@ -119,8 +119,11 @@ generator.apply(weights_init_normal)
 discriminator.apply(weights_init_normal)
 
 # Configure data loader
+import os
+path = input("输入数据集文件夹绝对路径：")
+if not os.path.exists(path):
+    raise Exception('[error]  dataset文件夹找不到')
 
-path = r'D:\GitHub\RiceDiseasesWeb\recognition\dataset'
 dts_class = MyDataset(path,opt.img_size)
 datasets = dts_class.getDatasets()
 dataloader = torch.utils.data.DataLoader(datasets,batch_size=opt.batch_size, shuffle=True)
