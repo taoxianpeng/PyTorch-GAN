@@ -23,7 +23,7 @@ writer = SummaryWriter('./path/to/log')
 os.makedirs("images", exist_ok=True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=2000, help="number of epochs of training")
+parser.add_argument("--n_epochs", type=int, default=8000, help="number of epochs of training")
 parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
@@ -32,7 +32,7 @@ parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads 
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
 parser.add_argument("--img_size", type=int, default=80, help="size of each image dimension")
 parser.add_argument("--channels", type=int, default=3, help="number of image channels")
-parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
+parser.add_argument("--sample_interval", type=int, default=1000, help="interval between image sampling")
 opt = parser.parse_args()
 print(opt)
 
@@ -157,6 +157,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 # ----------
 #运行时间统计，开始
 start_seconds = time.time()
+start_time = time.localtime()
 
 for epoch in range(opt.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
@@ -205,16 +206,26 @@ for epoch in range(opt.n_epochs):
             % (epoch, opt.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item())
         )
 
-        batches_done = epoch * len(dataloader) + i
-        if batches_done % opt.sample_interval == 0:
-            save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+        # batches_done = epoch * len(dataloader) + i
+        # if batches_done % opt.sample_interval == 0:
+        #     save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+        
+        #按epoch生成预览图
+        if epoch % 100 == 0:
+            if not os.path.exists("images/%d.png" % epoch):
+                save_image(gen_imgs.data[:25], "images/%d.png" % epoch, nrow=5, normalize=True)
+    
     #tensorboard保存每epoch D的损失函数和G的损失函数
     writer.add_scalar('generator:_loss', g_loss.item(), epoch)
     writer.add_scalar('discriminator_loss', d_loss.item(), epoch)
-torch.save(gen_imgs.state_dict(),'gen_modal.pt')
+
+torch.save(generator.state_dict(),'gen_modal.pt')
 
 #运行时间统计
 end_seconds = time.time()
+end_time = time.localtime()
+print('start time: {}'.format(time.strftime("%Y-%m-%d %H:%M:%S",start_time)))
+print('end time: {}'.format(time.strftime("%Y-%m-%d %H:%M:%S",end_time)))
 seconds = int(end_seconds-start_seconds)
 m, s = divmod(seconds, 60)
 h, m = divmod(m, 60)
