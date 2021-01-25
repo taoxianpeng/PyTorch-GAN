@@ -23,8 +23,8 @@ writer = SummaryWriter('./path/to/log')
 os.makedirs("images", exist_ok=True)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=8000, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
+parser.add_argument("--n_epochs", type=int, default=5000, help="number of epochs of training")
+parser.add_argument("--batch_size", type=int, default=512, help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
@@ -117,6 +117,10 @@ if cuda:
     discriminator.cuda()
     adversarial_loss.cuda()
 
+if torch.cuda.device_count() > 1:
+    generator = nn.DataParallel(generator)
+    discriminator = nn.DataParallel(discriminator)
+
 # Initialize weights
 generator.apply(weights_init_normal)
 discriminator.apply(weights_init_normal)
@@ -129,7 +133,7 @@ if not os.path.exists(path):
 
 dts_class = MyDataset(path,opt.img_size)
 datasets = dts_class.getDatasets()
-dataloader = torch.utils.data.DataLoader(datasets,batch_size=opt.batch_size, shuffle=True)
+dataloader = torch.utils.data.DataLoader(datasets,batch_size=opt.batch_size, shuffle=True, num_workers=8)
 
 # os.makedirs("../../data/mnist", exist_ok=True)
 # dataloader = torch.utils.data.DataLoader(
@@ -216,10 +220,10 @@ for epoch in range(opt.n_epochs):
                 save_image(gen_imgs.data[:25], "images/%d.png" % epoch, nrow=5, normalize=True)
     
     #tensorboard保存每epoch D的损失函数和G的损失函数
-    writer.add_scalar('generator:_loss', g_loss.item(), epoch)
-    writer.add_scalar('discriminator_loss', d_loss.item(), epoch)
+    writer.add_scalar('loss/generator', g_loss.item(), epoch)
+    writer.add_scalar('loss/discriminator', d_loss.item(), epoch)
 
-torch.save(generator.state_dict(),'gen_modal.pt')
+torch.save(generator,'gen_modal.pt')
 
 #运行时间统计
 end_seconds = time.time()
